@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = get_aspect_ratio()
-FRAME_WIDTH: float = get_frame_width()
+FRAME_WIDTH: float = get_frame_width(ASPECT_RATIO)
 FRAME_HEIGHT: float = FRAME_WIDTH / ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2

@@ -470,12 +470,16 @@ def get_camera_config(args: Namespace, custom_config: dict) -> dict:
     width_str, height_str = resolution.split("x")
     width = int(width_str)
     height = int(height_str)
+    aspect = width / height
 
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
         "frame_config": {
-            "frame_shape": (get_frame_width(), (height / width) * get_frame_width()),
+            "frame_shape": (
+                get_frame_width(aspect),
+                get_frame_width(aspect) / aspect,
+            ),
         },
         "fps": fps,
     })
@@ -523,8 +527,12 @@ def get_configuration(args: Namespace) -> dict:
         "embed_error_sound": custom_config["embed_error_sound"],
     }
 
-def get_frame_width():
-    return 8.0
+def get_frame_width(aspect: float):
+    if aspect < 1:
+        # portrait
+        return 8.0
+    # landscape
+    return 16.0 / 9.0 * 8.0
 
 def get_aspect_ratio():
     cam_config = get_camera_config(parse_cli(), get_custom_config())
