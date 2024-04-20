@@ -2,21 +2,24 @@ from __future__ import annotations
 import numpy as np
 
 from typing import TYPE_CHECKING
+
+from manimlib.config import get_aspect_ratio, get_frame_height, get_default_pixel_height, get_default_pixel_width
+
 if TYPE_CHECKING:
     from typing import List
     from manimlib.typing import ManimColor, Vect3
 
 
 # Sizes relevant to default camera frame
-ASPECT_RATIO: float = 16.0 / 9.0
-FRAME_HEIGHT: float = 8.0
+ASPECT_RATIO: float = get_aspect_ratio()
+FRAME_HEIGHT: float = get_frame_height()
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
 FRAME_X_RADIUS: float = FRAME_WIDTH / 2
 
-DEFAULT_PIXEL_HEIGHT: int = 1080
-DEFAULT_PIXEL_WIDTH: int = 1920
+DEFAULT_PIXEL_HEIGHT: int = get_default_pixel_height()
+DEFAULT_PIXEL_WIDTH: int = get_default_pixel_width()
 DEFAULT_FPS: int = 30
 
 SMALL_BUFF: float = 0.1
