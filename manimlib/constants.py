@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import TYPE_CHECKING
 
-from manimlib.config import get_aspect_ratio, get_frame_height, get_default_pixel_height, get_default_pixel_width
+from manimlib.config import get_aspect_ratio, get_frame_width, get_default_pixel_height, get_default_pixel_width
 
 if TYPE_CHECKING:
     from typing import List
@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = get_aspect_ratio()
-FRAME_HEIGHT: float = get_frame_height()
-FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
+FRAME_WIDTH: float = get_frame_width()
+FRAME_HEIGHT: float = FRAME_WIDTH / ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
 FRAME_X_RADIUS: float = FRAME_WIDTH / 2

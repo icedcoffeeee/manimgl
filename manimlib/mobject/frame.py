@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from manimlib.constants import BLACK, GREY_E
-from manimlib.constants import FRAME_HEIGHT
+from manimlib.constants import ASPECT_RATIO, FRAME_HEIGHT
 from manimlib.mobject.geometry import Rectangle
 
 from typing import TYPE_CHECKING
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class ScreenRectangle(Rectangle):
     def __init__(
         self,
-        aspect_ratio: float = 16.0 / 9.0,
+        aspect_ratio: float = ASPECT_RATIO,
         height: float = 4,
         **kwargs
     ):

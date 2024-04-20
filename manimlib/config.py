@@ -475,7 +475,7 @@ def get_camera_config(args: Namespace, custom_config: dict) -> dict:
         "pixel_width": width,
         "pixel_height": height,
         "frame_config": {
-            "frame_shape": ((width / height) * get_frame_height(), get_frame_height()),
+            "frame_shape": (get_frame_width(), (height / width) * get_frame_width()),
         },
         "fps": fps,
     })
@@ -523,7 +523,7 @@ def get_configuration(args: Namespace) -> dict:
         "embed_error_sound": custom_config["embed_error_sound"],
     }
 
-def get_frame_height():
+def get_frame_width():
     return 8.0
 
 def get_aspect_ratio():
