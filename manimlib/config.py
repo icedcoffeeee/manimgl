@@ -530,9 +530,9 @@ def get_configuration(args: Namespace) -> dict:
 def get_frame_width(aspect: float):
     if aspect < 1:
         # portrait
-        return 8.0
+        return 10.0
     # landscape
-    return 16.0 / 9.0 * 8.0
+    return 16.0 / 9.0 * 10.0
 
 def get_aspect_ratio():
     cam_config = get_camera_config(parse_cli(), get_custom_config())

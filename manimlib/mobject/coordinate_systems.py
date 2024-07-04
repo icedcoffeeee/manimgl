@@ -628,8 +628,8 @@ class NumberPlane(Axes):
 
     def __init__(
         self,
-        x_range: RangeSpecifier = (-8.0, 8.0, 1.0),
-        y_range: RangeSpecifier = (-4.0, 4.0, 1.0),
+        x_range: RangeSpecifier = (-9.0, 9.0, 1.0),
+        y_range: RangeSpecifier = (-5.0, 5.0, 1.0),
         background_line_style: dict = dict(
             stroke_color=BLUE_D,
             stroke_width=2,
