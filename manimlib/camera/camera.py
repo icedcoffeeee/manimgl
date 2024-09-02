@@ -125,7 +125,7 @@ class Camera(object):
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
         if self.window:
-            self.window.clear()
+            self.window.clear(*self.background_rgba)
 
     def blit(self, src_fbo, dst_fbo):
         """
