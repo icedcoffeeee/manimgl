@@ -4,6 +4,7 @@ from functools import wraps
 
 import moderngl
 import numpy as np
+import operator as op
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
@@ -97,11 +98,11 @@ class VMobject(Mobject):
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
-        flat_stroke: bool = True,
+        flat_stroke: bool = False,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
-        anti_alias_width: float = 1.0,
-        fill_border_width: float = 0.5,
+        anti_alias_width: float = 1.5,
+        fill_border_width: float = 0.0,
         use_winding_fill: bool = True,
         **kwargs
     ):
@@ -190,9 +191,13 @@ class VMobject(Mobject):
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
+        if opacity is not None and 0 < opacity < 1 and border_width is None:
+            border_width = 0
         if border_width is not None:
+            self.border_width = border_width
             for mob in self.get_family(recurse):
-                mob.data["fill_border_width"] = border_width
+                data = mob.data if mob.has_points() > 0 else mob._data_defaults
+                data["fill_border_width"] = border_width
         self.note_changed_fill()
         return self
 
@@ -202,6 +207,7 @@ class VMobject(Mobject):
         width: float | Iterable[float] | None = None,
         opacity: float | Iterable[float] | None = None,
         background: bool | None = None,
+        flat: bool | None = None,
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'stroke_rgba', recurse)
@@ -219,6 +225,9 @@ class VMobject(Mobject):
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.stroke_behind = background
+
+        if flat is not None:
+            self.set_flat_stroke(flat)
 
         self.note_changed_stroke()
         return self
@@ -238,11 +247,13 @@ class VMobject(Mobject):
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
         fill_opacity: float | Iterable[float] | None = None,
         fill_rgba: Vect4 | None = None,
+        fill_border_width: float | None = None,
         stroke_color: ManimColor | Iterable[ManimColor] | None = None,
         stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = False,
+        flat_stroke: bool = False,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ) -> Self:
@@ -253,6 +264,7 @@ class VMobject(Mobject):
                 mob.set_fill(
                     color=fill_color,
                     opacity=fill_opacity,
+                    border_width=fill_border_width,
                     recurse=False
                 )
 
@@ -261,6 +273,7 @@ class VMobject(Mobject):
                 mob.set_stroke(
                     width=stroke_width,
                     background=stroke_background,
+                    flat=flat_stroke,
                     recurse=False,
                 )
             else:
@@ -268,8 +281,9 @@ class VMobject(Mobject):
                     color=stroke_color,
                     width=stroke_width,
                     opacity=stroke_opacity,
-                    recurse=False,
+                    flat=flat_stroke,
                     background=stroke_background,
+                    recurse=False,
                 )
 
             if shading is not None:
@@ -282,9 +296,11 @@ class VMobject(Mobject):
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
             "fill_rgba": data['fill_rgba'].copy(),
+            "fill_border_width": data['fill_border_width'].copy(),
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
+            "flat_stroke": bool(self.uniforms["flat_stroke"]),
             "shading": self.get_shading(),
         }
 
@@ -430,23 +446,19 @@ class VMobject(Mobject):
     def apply_depth_test(
         self,
         anti_alias_width: float = 0,
-        fill_border_width: float = 0,
         recurse: bool = True
     ) -> Self:
         super().apply_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
-        self.set_fill(border_width=fill_border_width)
         return self
 
     def deactivate_depth_test(
         self,
         anti_alias_width: float = 1.0,
-        fill_border_width: float = 0.5,
         recurse: bool = True
     ) -> Self:
         super().deactivate_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
-        self.set_fill(border_width=fill_border_width)
         return self
 
     @Mobject.affects_family_data
@@ -466,7 +478,7 @@ class VMobject(Mobject):
         if len(anchors) == 0:
             self.clear_points()
             return self
-        assert(len(anchors) == len(handles) + 1)
+        assert len(anchors) == len(handles) + 1
         points = resize_array(self.get_points(), 2 * len(anchors) - 1)
         points[0::2] = anchors
         points[1::2] = handles
@@ -672,7 +684,7 @@ class VMobject(Mobject):
         return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
-        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
+        assert mode in ("jagged", "approx_smooth", "true_smooth")
         if self.get_num_points() == 0:
             return self
         subpaths = self.get_subpaths()
@@ -696,7 +708,7 @@ class VMobject(Mobject):
             self.add_subpath(new_subpath)
         return self
 
-    def make_smooth(self, approx=False, recurse=True) -> Self:
+    def make_smooth(self, approx=True, recurse=True) -> Self:
         """
         Edits the path so as to pass smoothly through all
         the current anchor points.
@@ -721,7 +733,7 @@ class VMobject(Mobject):
         return self
 
     def add_subpath(self, points: Vect3Array) -> Self:
-        assert(len(points) % 2 == 1 or len(points) == 0)
+        assert len(points) % 2 == 1 or len(points) == 0
         if not self.has_points():
             self.set_points(points)
             return self
@@ -1050,7 +1062,7 @@ class VMobject(Mobject):
         return self
 
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
-        assert(isinstance(vmobject, VMobject))
+        assert isinstance(vmobject, VMobject)
         vm_points = vmobject.get_points()
         self.data["joint_product"] = vmobject.data["joint_product"]
         if a <= 0 and b >= 1:
@@ -1200,7 +1212,7 @@ class VMobject(Mobject):
 
         points = self.get_points()
 
-        if(len(points) < 3):
+        if len(points) < 3:
             return self.data["joint_product"]
 
         # Find all the unit tangent vectors at each joint
@@ -1252,7 +1264,7 @@ class VMobject(Mobject):
         return wrapper
 
     def set_points(self, points: Vect3Array, refresh_joints: bool = True) -> Self:
-        assert(len(points) == 0 or len(points) % 2 == 1)
+        assert len(points) == 0 or len(points) % 2 == 1
         super().set_points(points)
         self.refresh_triangulation()
         if refresh_joints:
@@ -1262,7 +1274,7 @@ class VMobject(Mobject):
 
     @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array) -> Self:
-        assert(len(points) % 2 == 0)
+        assert len(points) % 2 == 0
         super().append_points(points)
         return self
 
@@ -1384,7 +1396,12 @@ class VMobject(Mobject):
             else:
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
-            if (not submob._has_stroke) or submob.stroke_behind:
+
+            draw_border_width = op.and_(
+                submob.data['fill_border_width'][0] > 0,
+                (not submob._has_stroke) or submob.stroke_behind,
+            )
+            if draw_border_width:
                 # Add fill border
                 submob.get_joint_products()
                 names = list(stroke_names)
