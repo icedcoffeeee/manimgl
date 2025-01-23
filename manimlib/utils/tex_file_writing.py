@@ -11,16 +11,19 @@ import tempfile
 
 from manimlib.utils.cache import cache_on_disk
 from manimlib.config import manim_config
-from manimlib.config import get_manim_dir
+from manimlib.config import get_manim_dir, load_yaml
 from manimlib.logger import log
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import hash_string
 
 
 def get_tex_template_config(template_name: str) -> dict[str, str]:
     name = template_name.replace(" ", "_").lower()
-    template_path = os.path.join(get_manim_dir(), "manimlib", "tex_templates.yml")
-    with open(template_path, encoding="utf-8") as tex_templates_file:
-        templates_dict = yaml.safe_load(tex_templates_file)
+    global_tex_file = os.path.join(get_manim_dir(), "manimlib", "tex_templates.yml")
+    templates_dict = merge_dicts_recursively(
+        load_yaml(global_tex_file),
+        load_yaml("custom_tex_templates.yml"),  # From current working directory
+    )
     if name not in templates_dict:
         log.warning(f"Cannot recognize template {name}, falling back to 'default'.")
         name = "default"
