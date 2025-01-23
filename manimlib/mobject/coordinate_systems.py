@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 EPSILON = 1e-8
-DEFAULT_X_RANGE = (-8.0, 8.0, 1.0)
+DEFAULT_X_RANGE = (-7.0, 7.0, 1.0)
 DEFAULT_Y_RANGE = (-4.0, 4.0, 1.0)
 
 
@@ -630,8 +630,8 @@ class NumberPlane(Axes):
 
     def __init__(
         self,
-        x_range: RangeSpecifier = (-8.0, 8.0, 1.0),
-        y_range: RangeSpecifier = (-4.0, 4.0, 1.0),
+        x_range: RangeSpecifier = DEFAULT_X_RANGE,
+        y_range: RangeSpecifier = DEFAULT_Y_RANGE,
         background_line_style: dict = dict(
             stroke_color=BLUE_D,
             stroke_width=2,

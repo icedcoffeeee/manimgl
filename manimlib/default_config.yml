@@ -90,7 +90,7 @@ resolution_options:
 sizes:
   # This determines the scale of the manim coordinate system with respect to
   # the viewing frame
-  frame_height: 8.0
+  frame_height: 9.0
   # These determine the constants SMALL_BUFF, MED_SMALL_BUFF, etc., useful
   # for nudging things around and having default spacing values
   small_buff: 0.1
