@@ -30,15 +30,21 @@ if TYPE_CHECKING:
 
 
 class Brace(Tex):
+
     def __init__(
         self,
         mobject: Mobject,
         direction: Vect3 = DOWN,
         buff: float = 0.2,
         tex_string: str = R"\underbrace{\qquad}",
+        width_multiplier: float = 2,
+        max_num_quads: int = 15,
+        min_num_quads: int = 0,
         **kwargs
     ):
-        super().__init__(tex_string, **kwargs)
+        self.width_multiplier = width_multiplier
+        self.max_num_quads = max_num_quads
+        self.min_num_quads = min_num_quads
 
         angle = -math.atan2(*direction[:2]) + PI
         mobject.rotate(-angle, about_point=ORIGIN)
@@ -46,24 +52,20 @@ class Brace(Tex):
         right = mobject.get_corner(DR)
         target_width = right[0] - left[0]
 
+        # Adding int(target_width) qquads gives approximately the right width
+        num_quads = np.clip(
+            int(self.width_multiplier * target_width),
+            self.min_num_quads, self.max_num_quads
+        )
+        tex_string = "\\underbrace{%s}" % (num_quads * "\\qquad")
+        super().__init__(tex_string, **kwargs)
+
         self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
-        self.set_initial_width(target_width)
+        self.stretch_to_fit_width(target_width)
+
         self.shift(left - self.get_corner(UL) + buff * DOWN)
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
-
-    def set_initial_width(self, width: float):
-        width_diff = width - self.get_width()
-        if width_diff > 0:
-            for tip, rect, vect in [(self[0], self[1], RIGHT), (self[5], self[4], LEFT)]:
-                rect.set_width(
-                    width_diff / 2 + rect.get_width(),
-                    about_edge=vect, stretch=True
-                )
-                tip.shift(-width_diff / 2 * vect)
-        else:
-            self.set_width(width, stretch=True)
-        return self
 
     def put_at_tip(
         self,
