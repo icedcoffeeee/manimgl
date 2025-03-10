@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
     "addict",
     "appdirs",
-    "audioop-lts>=0.2.1",
     "colour",
     "diskcache",
     "fontTools",
